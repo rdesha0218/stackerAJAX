@@ -49,7 +49,7 @@ var showQuestion = function(question) {
 var showAnswers = function(answerers) {
 		
 	// clone our result template code
-	var result = $('.templates .question').clone();
+	var result = $('.templates .answers').clone();
 	var stack = answerers.user;
 
 /*
@@ -65,7 +65,8 @@ var showAnswers = function(answerers) {
 	profile_image.attr('src', stack.profile_image);
 
 	//display name 	.display_name	anc
-	var display_name = result.find('.display_name');
+	var display_name = result.find('.display_name a');
+	display_name.text(stack.display_name);
 	display_name.attr('href',stack.link);
 
 	//reputation  	.reputation
@@ -126,18 +127,16 @@ var getUnanswered = function(tags) {
 	});
 };
 
-var topAnswered = function (tags) {
+var topAnswered = function(tags) {
   
     // the parameters we need to pass in our request to StackOverflow's API
     var request = {tagged: tags,
+    	period: 'month',
         site: 'stackoverflow',
-        order: 'desc',
-        sort: 'creation'
     };
 
     var result = $.ajax({
-        url: "http://api.stackexchange.com/2.2/tags/"+request.tagged+"/top-answerers/all_time",
-        data: request,
+        url: "http://api.stackexchange.com/2.2/tags/"+request.tagged+"/top-answerers/" + request.period + "?site=stackoverflow",
         dataType: "jsonp",
         type: "GET",
     })
