@@ -9,14 +9,13 @@ $(document).ready( function() {
 	$('.inspiration-getter').submit(function(event){
 		$('.results').html('');
 		var tags = $(this).find("input[name='tags']").val();
-		getinspired(tags);
+		topAnswered(tags);
 	});
 });
 
 // this function takes the question object returned by StackOverflow 
 // and creates new result to be appended to DOM
 var showQuestion = function(question) {
-	
 	// clone our result template code
 	var result = $('.templates .question').clone();
 	
@@ -42,6 +41,40 @@ var showQuestion = function(question) {
 							'</p>' +
  							'<p>Reputation: ' + question.owner.reputation + '</p>'
 	);
+
+	return result;
+};
+
+// Answers function
+var showAnswers = function(answerers) {
+		
+	// clone our result template code
+	var result = $('.templates .question').clone();
+	var stack = answerers.user;
+
+/*
+	user image 		.profile_image	src
+	display name 	.display_name	anc
+	reputation  	.reputation
+	accept rate 	.accept_rate
+
+*/
+
+	//user image 	.profile_image	src
+	var profile_image = result.find('.profile_image');
+	profile_image.attr('src', stack.profile_image);
+
+	//display name 	.display_name	anc
+	var display_name = result.find('.display_name');
+	display_name.attr('href',stack.link);
+
+	//reputation  	.reputation
+	var reputation = result.find('.reputation');
+	reputation.text(stack.reputation);
+
+	//accept rate 	.accept_rate
+	var accept_rate = result.find('.accept_rate');
+	accept_rate.text(stack.accept_rate + "%");
 
 	return result;
 };
@@ -93,31 +126,72 @@ var getUnanswered = function(tags) {
 	});
 };
 
-var getinspired = function(tags) {
+var topAnswered = function (tags) {
+  
+    // the parameters we need to pass in our request to StackOverflow's API
+    var request = {tagged: tags,
+        site: 'stackoverflow',
+        order: 'desc',
+        sort: 'creation'
+    };
 
+    var result = $.ajax({
+        url: "http://api.stackexchange.com/2.2/tags/"+request.tagged+"/top-answerers/all_time",
+        data: request,
+        dataType: "jsonp",
+        type: "GET",
+    })
+
+	.done(function (result) {
+	    var searchResults = showSearchResults(request.tagged, result.items.length);
+
+	    $('.search-results').html(searchResults);
+
+	    $.each(result.items, function (i, item) {
+	        
+	        var answerer = showAnswers(item);
+	        $('.results').append(answerer);
+	    });
+	})
+	.fail(function (jqXHR, error, errorThrown) {
+	    var errorElem = showError(error);
+	    $('.search-results').append(errorElem);
+	});
+};
+
+
+
+
+/*
+var topAnswered = function(tags) {
+	
+	// the parameters we need to pass in our request to StackOverflow's API
 	var request = {tagged: tags,
 								site: 'stackoverflow',
 								order: 'desc',
 								sort: 'creation'};
-
+	
 	var result = $.ajax({
-		url: "http://api.stackexchange.com/2.2/tags/" + tags + "/top-answerers/all_time?site=stackoverflow",
+		url: "http://api.stackexchange.com/2.2/tags/" + request.tagged + "/top-answerers/all_time?site=stackoverflow",
 		data: request,
 		dataType: "jsonp",
 		type: "GET",
 		})
-		.done(function(result){
+	.done(function (result) {
 		var searchResults = showSearchResults(request.tagged, result.items.length);
 
 		$('.search-results').html(searchResults);
 
-		$.each(result.items, function(i, item) {
-			var question = showQuestion(item);
-			$('.results').append(question);
+		$.each(result.items, function (i, item) {
+			
+			var answerer = showAnswers(item);
+			$('.results').append(answerer);
 		});
 	})
-	.fail(function(jqXHR, error, errorThrown){
+
+	.fail(function (jqXHR, error, errorThrown){
 		var errorElem = showError(error);
 		$('.search-results').append(errorElem);
 	});
-};
+};	
+*/
